@@ -1,0 +1,39 @@
+# view AndroidManifest.xml #generated:39
+-keep class com.moe.icelauncher.LauncherActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:73
+-keep class com.moe.icelauncher.LauncherProvider { <init>(...); }
+
+# view AndroidManifest.xml #generated:66
+-keep class com.moe.icelauncher.SettingsActivity { <init>(...); }
+
+# view res/xml/launcher_preferences.xml #generated:30
+-keep class com.moe.icelauncher.preference.SeekBarPreference { <init>(...); }
+
+# view AndroidManifest.xml #generated:80
+-keep class com.moe.icelauncher.receiver.Admin { <init>(...); }
+
+# view AndroidManifest.xml #generated:58
+-keep class com.moe.icelauncher.receiver.InstallShortcutReceiver { <init>(...); }
+
+# view res/layout/main.xml #generated:5
+-keep class com.moe.icelauncher.widget.ContainerView { <init>(...); }
+
+# view res/layout/main.xml #generated:31
+-keep class com.moe.icelauncher.widget.GridView { <init>(...); }
+
+# view res/layout/main.xml #generated:17
+-keep class com.moe.icelauncher.widget.HotseatLayout { <init>(...); }
+
+# view res/layout/main.xml #generated:21
+-keep class com.moe.icelauncher.widget.ScrollerGroupView { <init>(...); }
+
+# view res/layout/main.xml #generated:25
+-keep class com.moe.icelauncher.widget.SearchView { <init>(...); }
+
+# view res/layout/main.xml #generated:13
+-keep class com.moe.icelauncher.widget.ToolBarView { <init>(...); }
+
+# view res/layout/main.xml #generated:9
+-keep class com.moe.icelauncher.widget.WorkSpaceLayout { <init>(...); }
+

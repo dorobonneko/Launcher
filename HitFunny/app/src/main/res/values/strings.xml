@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-
-    <string name="app_name">HitFunny</string>
-    <string name="singleMode">单人模式</string>
-	<string name="doubleMode">双人模式</string>
-	<string name="about">关于</string>
-</resources>

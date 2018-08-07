@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+	<resources>
+		<dimen name="icon_text_size">14sp</dimen>
+		<dimen name="item_height">52dp</dimen>
+		<dimen name="item_icon_size">32dp</dimen>
+		<dimen name="item_cellspacing">8dp</dimen>
+		<dimen name="item_title_size">12sp</dimen>
+		<dimen name="bottom_height">102dp</dimen>
+		<dimen name="cursor_size">5dp</dimen>
+		<dimen name="workspace_padding">4dp</dimen>
+		<dimen name="celllayout_shown_size">16dp</dimen>
+		<dimen name="icon_padding">32dp</dimen>
+		<dimen name="toolbar_height">52dp</dimen>
+	</resources>

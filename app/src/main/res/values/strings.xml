@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Launcher</string>
+    <string name="settings_button_text">设置</string>
+	<string name="allow_rotation_title">自动转屏</string>
+	<string name="permlab_read_settings">读取设置</string>
+	<string name="permdesc_read_settings">读取设置</string>
+	<string name="permlab_write_settings">写入设置</string>
+	<string name="permdesc_write_settings">写入设置</string>
+	<string name="rotation_desc">屏幕方向跟随系统</string>
+	<string name="uninstall">卸载</string>
+	<string name="uninstall_desc">如果你设置了设备管理员，请点击此处卸载</string>
+	<string name="how_to_do">请选择</string>
+	<string name="clear_device_owner">解除管理员</string>
+	<string name="search_apps">搜索应用</string>
+	<string name="activity_not_found">活动界面未找到</string>
+	<string name="hideorunhide">隐藏/显示</string>
+	<string name="applicationinfo">应用信息</string>
+	<string name="package_not_found">应用不存在，是否移除图标？</string>
+	<string name="icon_colnums">图标列数</string>
+	<string name="shortcut">快捷方式</string>
+	<string name="preview_table">网格线</string>
+	<string name="table_helper">网格辅助定位</string>
+</resources>

@@ -1,0 +1,12 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <item
+		android:src="@drawable/eye_outline"
+        android:id="@+id/hideorunhide"
+        android:title="@string/hideorunhide"/>
+	<item
+		android:src="@drawable/alert_circle_outline"
+		android:id="@+id/applicationinfo"
+		android:title="@string/applicationinfo"/>
+    
+</menu>
