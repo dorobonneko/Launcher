@@ -74,6 +74,7 @@ public class SearchView extends TextView
 	@Override
 	public boolean dispatchTouchEvent(MotionEvent event)
 	{
+		if(!isEnabled())return false;
 		if(!hasFocusable()){
 			//无焦点，拦截事件
 			switch(event.getAction()){

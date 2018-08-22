@@ -7,9 +7,9 @@ android {
     defaultConfig {
         applicationId "com.moe.icelauncher"
         minSdkVersion 25
-        targetSdkVersion 27
-        versionCode 1
-        versionName "0.0.1beta"
+        targetSdkVersion 28
+        versionCode 2
+        versionName "0.0.2beta"
     }
     buildTypes {
         release {
@@ -20,6 +20,5 @@ android {
 }
 
 dependencies {
-	compile 'com.android.support:support-core-ui:27.+'
 	compile fileTree(dir: 'libs', include: ['*.jar'])
 }

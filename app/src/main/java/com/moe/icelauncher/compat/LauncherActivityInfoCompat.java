@@ -22,6 +22,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.ResolveInfo;
 import android.graphics.drawable.Drawable;
 import android.os.UserHandle;
+import java.util.*;
 
 public abstract class LauncherActivityInfoCompat {
 
@@ -42,4 +43,7 @@ public abstract class LauncherActivityInfoCompat {
     public static LauncherActivityInfoCompat fromResolveInfo(ResolveInfo info, Context context) {
         return new LauncherActivityInfoCompatV16(context, info);
     }
+	/*public static LauncherActivityInfoCompat fromMap(Context context,String packageName,Map<String,String> map){
+		return new LauncherActivityInfoCompatV16(context,packageName,map);
+	}*/
 }

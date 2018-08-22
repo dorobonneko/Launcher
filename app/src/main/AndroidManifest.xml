@@ -28,7 +28,9 @@
 		android:resizeableActivity="true"
 		android:hardwareAccelerated="true"
 		android:largeHeap="true"
-		>
+		android:name=".app.Application"
+		android:screenOrientation="portrait"
+		android:launchMode="singleTask">
 		<activity
 			android:autoRemoveFromRecents="true"
 			android:name=".LauncherActivity"
@@ -36,7 +38,6 @@
             android:clearTaskOnLaunch="true"
             android:stateNotNeeded="true"
             android:theme="@style/Theme"
-            android:screenOrientation="portrait"
             android:resumeWhilePausing="true"
             android:taskAffinity=""
             android:enabled="true">
@@ -79,6 +80,11 @@
 					<action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
 				</intent-filter>
 			</receiver>
-			
+			<activity
+				android:name=".CrashActivity"/>
+			<activity
+				android:autoRemoveFromRecents="true"
+				android:name=".DetailsActivity"
+				/>
 	</application>
 </manifest>

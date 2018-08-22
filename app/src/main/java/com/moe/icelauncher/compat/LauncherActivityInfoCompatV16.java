@@ -27,6 +27,7 @@ import android.content.pm.ResolveInfo;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.os.UserHandle;
+import java.util.*;
 
 
 public class LauncherActivityInfoCompatV16 extends LauncherActivityInfoCompat {
@@ -42,7 +43,6 @@ public class LauncherActivityInfoCompatV16 extends LauncherActivityInfoCompat {
         mComponentName = new ComponentName(mActivityInfo.packageName, mActivityInfo.name);
         mPm = context.getPackageManager();
     }
-
     public ComponentName getComponentName() {
         return mComponentName;
     }

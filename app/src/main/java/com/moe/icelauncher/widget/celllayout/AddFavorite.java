@@ -12,6 +12,7 @@ import com.moe.icelauncher.model.FavoriteInfo;
 import com.moe.icelauncher.model.AppInfo;
 import android.content.Context;
 import com.moe.icelauncher.widget.HotseatLayout;
+import android.graphics.Rect;
 
 public class AddFavorite implements Runnable
 {
@@ -35,9 +36,19 @@ public class AddFavorite implements Runnable
 		addFavourites(cellXY,info);
 	}
 	public void addFavourites(int[] cell,CellLayout.Info celllayout){
-		ItemInfo info=celllayout.info;
 		View view=celllayout.view;
-		if(mWorkSpaceLayout==null)
+		if(view instanceof Cell){
+			Cell cellView=(Cell) view;
+		Rect bounds=new Rect();
+		bounds.left=cell[0];
+		bounds.top=cell[1];
+		bounds.right=bounds.left+cellView.getSpanX();
+		bounds.bottom=bounds.top+cellView.getSpanY();
+		if(mCellLayout.findViewsFromRect(bounds).length>0)return;
+		}
+		mCellLayout.save();
+		ItemInfo info=celllayout.info;
+		if(mWorkSpaceLayout==null&&mCellLayout.getParent() instanceof WorkSpaceLayout)
 			mWorkSpaceLayout=(WorkSpaceLayout) mCellLayout.getParent();
 		if(mCellLayout.isPreview()){
 			mCellLayout.setPrebiew(false);

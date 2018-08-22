@@ -7,6 +7,7 @@ import com.moe.icelauncher.Utilities;
 import android.content.Intent;
 import android.content.ComponentName;
 import android.graphics.drawable.Drawable;
+import android.content.Context;
 
 public class AppInfo extends ItemInfo
 {
@@ -16,22 +17,23 @@ public class AppInfo extends ItemInfo
 	public int flags;
 	public String activity;
 	public String componentName(){
+		if(activity.indexOf("/")!=-1)return activity;
 		return packageName+"/"+activity;
 		}
 	
-	/*void addToDatabase(ContentValues cv){
+	void addToDatabase(ContentValues cv,Context context){
 		//cv.put(LauncherSettings.AllApps._ID,_id);
-		cv.put(LauncherSettings.AllApps.COMPONENTNAME,componentName);
-		cv.put(LauncherSettings.AllApps.ICON,Utilities.flattenBitmap(icon));
+		cv.put(LauncherSettings.AllApps.COMPONENTNAME,componentName());
+		//cv.put(LauncherSettings.AllApps.ICON,Utilities.flattenDrawable(icon,context));
 		cv.put(LauncherSettings.AllApps.TITLE,title);
-		cv.put(LauncherSettings.AllApps.PROFILEID,profileId);
+		//cv.put(LauncherSettings.AllApps.,profileId);
 		cv.put(LauncherSettings.AllApps.ICONSANIFYSCALE,iconSanifyScale);
 		cv.put(LauncherSettings.AllApps.STATE,state);
 		cv.put(LauncherSettings.AllApps.LASTUPDATETIME,lastUpdateTime);
 		cv.put(LauncherSettings.AllApps.FLAGS,flags);
 		cv.put(LauncherSettings.AllApps.PACKAGENAME,packageName);
 		
-	}*/
+	}
 
 	@Override
 	public boolean equals(Object obj)

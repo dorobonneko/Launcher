@@ -140,4 +140,14 @@ public class LauncherSettings
 		public static final String ICON="icon";
 		public static final String COMPONENTNAME="componentName";
 	}
+	public static final class Shortcuts implements BaseColumns{
+		public static final String TABLE_NAME="shortcuts";
+		public static final Uri CONTENT_URI = Uri.parse("content://" +
+														ProviderConfig.AUTHORITY + "/" + TABLE_NAME);
+		public static final String _ID="_id";
+		public static final String PACKAGENAME="packageName";
+		public static final String TITLE="title";
+		public static final String INTENT="intent";
+		
+	}
 }

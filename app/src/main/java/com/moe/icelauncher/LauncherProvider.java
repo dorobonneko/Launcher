@@ -1,19 +1,3 @@
-/*
- * Copyright (C) 2008 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.moe.icelauncher;
 import android.content.ContentProvider;
 import android.database.Cursor;
@@ -29,6 +13,11 @@ import android.content.SharedPreferences;
 import android.os.Binder;
 import android.content.Context;
 import com.moe.icelauncher.model.LauncherModel;
+import android.content.*;
+import android.provider.*;
+import android.content.pm.*;
+import com.moe.icelauncher.model.*;
+import java.util.*;
 
 public class LauncherProvider extends ContentProvider
 {
@@ -48,7 +37,7 @@ public class LauncherProvider extends ContentProvider
 		mUriMatcher.addURI(ProviderConfig.AUTHORITY,LauncherSettings.Favorites.TABLE_NAME,URI_MATCH_FAVORITES);
 		mUriMatcher.addURI(ProviderConfig.AUTHORITY,LauncherSettings.WorkspaceScreens.TABLE_NAME,URI_MATCH_WORKSPACESCREENS);
 		sql=getContext().openOrCreateDatabase(TAG,Context.MODE_PRIVATE,null);
-		if(sql.getVersion()!=3){
+		if(sql.getVersion()!=1){
 			sql.execSQL("DROP TABLE IF EXISTS "+LauncherSettings.AllApps.TABLE_NAME);
 			sql.execSQL("CREATE TABLE allapps (_id INTEGER PRIMARY KEY, componentName TEXT NOT NULL UNIQUE, profileId LONG DEFAULT -1, title TEXT, icon BLOB, iconSanifyScale FLOAT, lastUpdateTime LONG NOT NULL DEFAULT 0,flags INTEGER NOT NULL DEFAULT 0,modified INTEGER NOT NULL DEFAULT 0,state INTEGER NOT NULL DEFAULT 0,packageName TEXT NOT NULL)");
 			sql.execSQL("DROP TABLE IF EXISTS favorites");
@@ -58,7 +47,11 @@ public class LauncherProvider extends ContentProvider
 			sql.execSQL("INSERT INTO workspaceScreens(screenRank,allowBlank,modified) values(0,1,"+System.currentTimeMillis()+")");
 			sql.execSQL("DROP TABLE IF EXISTS "+LauncherSettings.Icons.TABLE_NAME);
 			sql.execSQL("CREATE TABLE icons (_id INTEGER PRIMARY KEY, componentName TEXT NOT NULL UNIQUE, title TEXT, icon BLOB,modified INTEGER NOT NULL DEFAULT 0,packageName TEXT NOT NULL,version INTEGER)");
-			sql.setVersion(3);
+			sql.execSQL("DROP TABLE IF EXISTS "+LauncherSettings.Shortcuts.TABLE_NAME);
+			sql.execSQL("CREATE TABLE shortcuts (_id INTEGER PRIMARY KEY, intent TEXT NOT NULL UNIQUE, title TEXT,modified INTEGER NOT NULL DEFAULT 0,packageName TEXT NOT NULL)");
+			initShortcuts();
+			sql.setVersion(1);
+			
 		}
 		/*settings=getContext().openOrCreateDatabase("Settings",0,null);
 		if(settings.getSyncedTables().size()==0){
@@ -206,4 +199,45 @@ public class LauncherProvider extends ContentProvider
             }
         }
     }
+	private void initShortcuts(){
+		//通话
+		Intent call=new Intent(Intent.ACTION_DIAL);
+		//短信
+		Intent sms=new Intent(Intent.ACTION_MAIN);
+		sms.addCategory(Intent.CATEGORY_APP_MESSAGING);
+		//浏览器
+		Intent browser=new Intent(Intent.ACTION_MAIN);
+		browser.addCategory(Intent.CATEGORY_APP_BROWSER);
+		//拍照
+		Intent capture=new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+		insert(call,0);
+		insert(sms,1);
+		insert(browser,2);
+		insert(capture,3);
+	}
+	private void insert(Intent intent,int cellX){
+		PackageManager pm=getContext().getPackageManager();
+		List<ResolveInfo> list=pm.queryIntentActivities(intent,pm.GET_UNINSTALLED_PACKAGES|pm.GET_INTENT_FILTERS);
+		if(list.size()==0)return;
+		ResolveInfo info=list.get(0);
+			Intent launcher=pm.getLaunchIntentForPackage(info.activityInfo.packageName);
+			if(launcher!=null){
+				FavoriteInfo favoriteInfo=new FavoriteInfo();
+				favoriteInfo.cellX=cellX;
+				favoriteInfo.container=LauncherSettings.Favorites.CONTAINER_HOTSEAT;
+				favoriteInfo.intent=launcher.toURI();
+				favoriteInfo.itemType=LauncherSettings.Favorites.ITEM_TYPE_APPLICATION;
+				favoriteInfo.spanX=1;
+				favoriteInfo.spanY=1;
+				favoriteInfo.state=-1;
+				favoriteInfo.title=info.loadLabel(pm).toString();
+				favoriteInfo.icon=info.loadIcon(pm);
+				favoriteInfo.packageName=info.activityInfo.packageName;
+				ContentValues cv=new ContentValues();
+				favoriteInfo.addToDatabase(cv,getContext());
+				insert(LauncherSettings.Favorites.CONTENT_URI,cv);
+			}
+			
+		
+	}
 }

@@ -31,9 +31,14 @@ import android.view.View.OnDragListener;
 import com.moe.icelauncher.model.FavoriteInfo;
 import com.moe.icelauncher.LauncherSettings;
 import android.view.ViewGroup;
+import com.moe.icelauncher.widget.celllayout.Cell;
+import android.content.Intent;
 
-public class IconView extends View
+public class IconView extends View implements Cell
 {
+
+	
+	
 	private ItemInfo info;
 	private Paint paint;
 	private Matrix matrix;
@@ -55,12 +60,14 @@ public class IconView extends View
 	private int padding;
 	private boolean showTtitle=true;
 	private OnDragListener mOnDragListener;
+	private DragShadowBuilder build;
 	public IconView(Context context){
 		super(context);
 		matrix=new Matrix();
 		paint=new Paint(Paint.ANTI_ALIAS_FLAG);
 		paint.setTextSize(getResources().getDimension(R.dimen.icon_text_size));
-		paint.setColor(0xff555555);
+		paint.setColor(0xffffffff);
+		paint.setShadowLayer(5,0,0,0xaf000000);
 		configuration=ViewConfiguration.get(context);
 		mColorFilter=(new PorterDuffColorFilter(0x50ffffff,PorterDuff.Mode.SRC_ATOP));
 		snow=getResources().getDrawable(R.drawable.eye_off_outline);
@@ -167,17 +174,15 @@ public class IconView extends View
 	public void setColorFilter(ColorFilter filter){
 		if(info.icon!=null)
 			info.icon.setColorFilter(filter);
-			if(draging){
-				View.DragShadowBuilder build=new View.DragShadowBuilder(){
+			/*View.DragShadowBuilder build=new View.DragShadowBuilder(){
 					public void onDrawShadow(Canvas canvas){
 						info.icon.draw(canvas);
 					}
 					public void onProvideShadowMetrics(Point size,Point touch){
 						size.set(getWidth(),getHeight());
 					}
-				};
+				};*/
 			updateDragShadow(build);
-			}
 	}
 	@Override
 	public boolean dispatchTouchEvent(final MotionEvent event)
@@ -192,7 +197,7 @@ public class IconView extends View
 				handler.sendMessageDelayed(handler.obtainMessage(ON_LONG_CLICK,(int)event.getX(),(int)event.getY(),null),configuration.getLongPressTimeout());
 				break;
 			case event.ACTION_MOVE:
-				if(intercept&&(Math.abs(event.getRawY()-oldY)>configuration.getTouchSlop()||Math.abs(event.getRawX()-oldX)>configuration.getTouchSlop())){
+				if(intercept&&(Math.abs(event.getRawY()-oldY)>configuration.getScaledTouchSlop()||Math.abs(event.getRawX()-oldX)>configuration.getScaledTouchSlop())){
 					//偏移过多，视为滚动
 					if(handler.hasMessages(ON_LONG_CLICK)){
 						intercept=false;
@@ -201,7 +206,7 @@ public class IconView extends View
 					handler.removeMessages(ON_PRESSED);
 					handler.removeMessages(ON_LONG_CLICK);
 					//return true;
-					}else if(Math.abs(event.getRawY()-oldY)>configuration.getTouchSlop()*2||Math.abs(event.getRawX()-oldX)>configuration.getTouchSlop()*2){
+					}else if(Math.abs(event.getRawY()-oldY)>configuration.getScaledTouchSlop()||Math.abs(event.getRawX()-oldX)>configuration.getScaledTouchSlop()){
 						intercept=false;
 						/*View.DragShadowBuilder build=new View.DragShadowBuilder(IconView.this){
 							public void onProvideShadowMetrics(Point out,Point outTouch){
@@ -215,9 +220,9 @@ public class IconView extends View
 								info.icon.draw(canvas);
 							}
 							public void onProvideShadowMetrics(Point size,Point touch){
-								size.set(getWidth(),getHeight());
-								touch.x=(int)event.getX();
-								touch.y=(int)event.getY();
+								size.set(getMeasuredWidth(),getMeasuredHeight());
+								touch.x=(int)event.getX()-(int)getTranslationX();
+								touch.y=(int)event.getY()-(int)getTranslationY();
 								
 							}
 						};
@@ -225,7 +230,9 @@ public class IconView extends View
 						CellLayout.Info ci=new CellLayout.Info();
 						ci.view=IconView.this;
 						ci.info=info;
-						startDrag(ClipData.newPlainText("title",info.title),build,ci,0);
+						ci.shadow=build;
+						this.build=build;
+						startDrag(ClipData.newPlainText("title",info.title),build,ci,DRAG_FLAG_OPAQUE);
 						return true;
 				}
 				}
@@ -324,5 +331,47 @@ public class IconView extends View
 	/*private static Bitmap reSetIcon(Bitmap icon,int width){
 		//检查图标状态，重新处理
 	}*/
-	
+	@Override
+	public int getCellX()
+	{
+		if(info instanceof FavoriteInfo)
+		return ((FavoriteInfo)info).cellX;
+		return 0;
+	}
+
+	@Override
+	public int getCellY()
+	{
+		if(info instanceof FavoriteInfo)
+			return ((FavoriteInfo)info).cellY;
+		return 0;
+	}
+
+	@Override
+	public int getSpanX()
+	{
+		if(info instanceof FavoriteInfo)
+			return ((FavoriteInfo)info).spanX;
+		return 1;
+	}
+
+	@Override
+	public int getSpanY()
+	{
+		if(info instanceof FavoriteInfo)
+			return ((FavoriteInfo)info).spanY;
+		return 1;
+	}
+
+	@Override
+	public int getState()
+	{
+		return info.state;
+	}
+
+	@Override
+	public Intent getIntent()
+	{
+		return info.getIntent();
+	}
 }

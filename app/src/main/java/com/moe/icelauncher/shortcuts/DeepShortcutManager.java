@@ -16,6 +16,8 @@ import android.graphics.drawable.Drawable;
 import java.util.ArrayList;
 import android.content.pm.ShortcutInfo;
 import java.util.Collections;
+import android.widget.*;
+import com.moe.icelauncher.*;
 public class DeepShortcutManager {
     private static final String TAG = "DeepShortcutManager";
 
@@ -46,12 +48,12 @@ public class DeepShortcutManager {
         }
     }
 
-    public static boolean supportsShortcuts(ItemInfo info) {
+    /*public static boolean supportsShortcuts(ItemInfo info) {
         boolean isItemPromise = info instanceof com.moe.icelauncher.model.ShortcutInfo
 			&& ((com.moe.icelauncher.model.ShortcutInfo) info).hasPromiseIconUi();
         return info.itemType == LauncherSettings.Favorites.ITEM_TYPE_APPLICATION
 			&& !info.isDisabled() && !isItemPromise;
-    }
+    }*/
 
     public boolean wasLastCallSuccess() {
         return mWasLastCallSuccess;
@@ -130,9 +132,13 @@ public class DeepShortcutManager {
                 mLauncherApps.startShortcut(packageName, id, intent.getSourceBounds(),
 											startActivityOptions, user);
                 mWasLastCallSuccess = true;
-            } catch (SecurityException|IllegalStateException e) {
-                Log.e(TAG, "Failed to start shortcut", e);
-                mWasLastCallSuccess = false;
+            } catch (Exception e) {
+				try{
+					mContext.startActivity(ShortcutInfoCompatBackport.stripPackage(intent), startActivityOptions);
+				}catch(Exception ee){
+					Toast.makeText(mContext,R.string.activity_not_opened,Toast.LENGTH_SHORT).show();
+				}
+                 mWasLastCallSuccess = false;
             }
         } else {
             mContext.startActivity(ShortcutInfoCompatBackport.stripPackage(intent), startActivityOptions);

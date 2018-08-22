@@ -17,13 +17,15 @@ public class GridView extends android.widget.GridView
 	private Paint paint;
 	private float oldY;
 	private boolean intercept;
-	private boolean line;
 	private View mMotionTarget;
 	public GridView(Context context,AttributeSet attrs){
 		super(context,attrs);
 		setSelector(new BitmapDrawable());
+		setSmoothScrollbarEnabled(true);
 		//setFastScrollEnabled(true);
 		//setFastScrollAlwaysVisible(true);
+		//setFastScrollStyle(android.R.style.Widget_Material_FastScroll);
+		setOverScrollMode(OVER_SCROLL_ALWAYS);
 		setNumColumns(4);
 		paint=new Paint(Paint.ANTI_ALIAS_FLAG);
 		shader=new LinearGradient(0,0,0,10,0x30000000,0x00000000,LinearGradient.TileMode.CLAMP);
@@ -35,21 +37,22 @@ public class GridView extends android.widget.GridView
 	{
 		super.draw(canvas);
 		//绘制阴影
-		if(line){
+		if(getChildScrollY()==0){
 			paint.setShader(null);
 		canvas.drawRect(35,0,canvas.getWidth()-35,2,paint);
 		}else{
 			paint.setShader(shader);
-		canvas.drawRect(0,0,canvas.getWidth(),canvas.getHeight(),paint);
+		canvas.drawRect(0,0,canvas.getWidth(),10,paint);
 	
 		}}
 
 	@Override
 	public boolean dispatchTouchEvent(MotionEvent ev)
 	{
+		if(!isEnabled())return false;
 		switch(ev.getAction()){
 			case ev.ACTION_DOWN:
-				super.onTouchEvent(ev);
+				super.dispatchTouchEvent(ev);
 				oldY=ev.getRawY();
 				break;
 			case ev.ACTION_CANCEL:
@@ -100,12 +103,7 @@ public class GridView extends android.widget.GridView
 		}
 		return flag||intercept;
 	}
-	@Override
-	public boolean onInterceptTouchEvent(MotionEvent ev)
-	{
-		// TODO: Implement this method
-		return true;
-	}
+	
 	
 private boolean dispatchChild(MotionEvent event){
 	float ex=event.getX(),ey=event.getY();
@@ -161,17 +159,9 @@ private boolean dispatchChild(MotionEvent event){
 	{
 		if(getChildCount()>0){
 			View view=getChildAt(0);
-			return -view.getTop()+getFirstVisiblePosition()*view.getHeight();
+			return view.getTop();
+			//return -view.getTop()+getFirstVisiblePosition()*view.getHeight();
 		}
 		return 0;
 	}
-
-	@Override
-	protected int computeVerticalScrollOffset()
-	{
-		line=getChildScrollY()==0;
-		
-		return super.computeVerticalScrollOffset();
-	}
-	
 }

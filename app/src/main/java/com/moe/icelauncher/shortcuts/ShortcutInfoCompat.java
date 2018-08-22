@@ -17,6 +17,11 @@ public class ShortcutInfoCompat {
         mShortcutInfo = shortcutInfo;
     }
 
+	public Intent getIntent()
+	{
+		return mShortcutInfo.getIntent();
+	}
+
     @TargetApi(Build.VERSION_CODES.N)
     public Intent makeIntent() {
         return new Intent(Intent.ACTION_MAIN)

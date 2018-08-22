@@ -8,5 +8,9 @@
 		android:src="@drawable/alert_circle_outline"
 		android:id="@+id/applicationinfo"
 		android:title="@string/applicationinfo"/>
+    <item
+		android:src="@drawable/ic_plus"
+		android:id="@+id/plus"
+		android:title="@string/plusquickenter"/>
     
 </menu>

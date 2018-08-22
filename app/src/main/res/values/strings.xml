@@ -17,9 +17,15 @@
 	<string name="activity_not_found">活动界面未找到</string>
 	<string name="hideorunhide">隐藏/显示</string>
 	<string name="applicationinfo">应用信息</string>
-	<string name="package_not_found">应用不存在，是否移除图标？</string>
+	<string name="package_not_found_and_remove">应用不存在，是否移除图标？</string>
 	<string name="icon_colnums">图标列数</string>
 	<string name="shortcut">快捷方式</string>
 	<string name="preview_table">网格线</string>
 	<string name="table_helper">网格辅助定位</string>
+	<string name="plusquickenter">添加快捷入口</string>
+	<string name="activity_not_opened">无法进入该活动</string>
+	<string name="package_not_found">应用不存在</string>
+	<string name="name">名称：</string>
+	<string name="class_name">类：</string>
+	<string name="ornotdelete">是否删除？</string>
 </resources>

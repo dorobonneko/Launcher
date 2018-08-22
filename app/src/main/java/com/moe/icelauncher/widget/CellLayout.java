@@ -30,6 +30,8 @@ import com.moe.icelauncher.model.IconInfo;
 import com.moe.icelauncher.widget.celllayout.AddFavorite;
 import com.moe.icelauncher.widget.celllayout.FloatViewPointCheck;
 import android.graphics.Rect;
+import com.moe.icelauncher.util.SubThread;
+import java.util.ArrayList;
 
 public class CellLayout extends MoeViewGroup implements View.OnClickListener,View.OnDragListener
 {
@@ -62,7 +64,7 @@ public class CellLayout extends MoeViewGroup implements View.OnClickListener,Vie
 	}
 	public void reloadFavorites(String packageName){
 		if(!isPreview()){
-			for(int i=0;i<getChildCount();i++){
+			for(int i=getChildCount()-1;i>0;i--){
 				IconView child=(IconView)getChildAt(i);
 				ItemInfo info=child.getItemInfo();
 				if(info.packageName.equals(packageName))
@@ -111,7 +113,7 @@ public class CellLayout extends MoeViewGroup implements View.OnClickListener,Vie
 			}catch(Exception e){
 				try{getContext().getPackageManager().getInstallerPackageName(info.packageName);}
 				catch(Exception e1){
-					new AlertDialog.Builder(getContext()).setTitle(info.title).setMessage(R.string.package_not_found).setPositiveButton(android.R.string.cancel, null).setNegativeButton(android.R.string.ok, new DialogInterface.OnClickListener(){
+					new AlertDialog.Builder(getContext()).setTitle(info.title).setMessage(R.string.package_not_found_and_remove).setPositiveButton(android.R.string.cancel, null).setNegativeButton(android.R.string.ok, new DialogInterface.OnClickListener(){
 
 							@Override
 							public void onClick(DialogInterface p1, int p2)
@@ -129,7 +131,9 @@ public class CellLayout extends MoeViewGroup implements View.OnClickListener,Vie
 	@Override
 	public boolean dispatchTouchEvent(MotionEvent ev)
 	{
+		if(isEnabled())
 		return dispatchChildTouchEvent(ev);
+		return false;
 	}
 	public int getChildWidth(){
 		return childWidth;
@@ -275,28 +279,45 @@ public class CellLayout extends MoeViewGroup implements View.OnClickListener,Vie
 				setBorderLine(true);
 				if(!(this instanceof HotseatLayout))
 				postDelayed(hover,500);
+				mPointCheck.setActive(true);
 				break;
 			case event.ACTION_DRAG_EXITED:
 				removeCallbacks(hover);
 				setBorderLine(false);
+				mPointCheck.setActive(false);
 				break;
+			
 			case event.ACTION_DRAG_ENDED:
+				mPointCheck.setActive(false);
+				SubThread.getInstance().removeCallback(mPointCheck);
+				SubThread.getInstance().post(mPointCheck);
 				editAble=false;
 				setBorderLine(false);
 				setBackground(0);
 				checkItems();
 				break;
+			case event.ACTION_DRAG_LOCATION:
+				SubThread.getInstance().removeCallback(mPointCheck);
+				CellLayout.Info info=(CellLayout.Info)event.getLocalState();
+				if(info.info instanceof FavoriteInfo){
+					FavoriteInfo favoriteInfo=(FavoriteInfo) info.info;
+					mPointCheck.setPoint(event.getX(),event.getY(),favoriteInfo.spanX,favoriteInfo.spanY);
+				}else if(info.info instanceof AppInfo)
+					mPointCheck.setPoint(event.getX(),event.getY(),1,1);
+				SubThread.getInstance().postDelayed(mPointCheck,200);
+				break;
 			case event.ACTION_DROP:
-				int[] cellXY=pointToSpan(event.getX(),event.getY());
-				if(getViewFromPoint(cellXY[0],cellXY[1])== ((CellLayout.Info)event.getLocalState()).view)break;
+				int[] cellXY=pointToCell(event.getX(),event.getY());
+				if(findViewFromPoint(cellXY[0],cellXY[1])== ((CellLayout.Info)event.getLocalState()).view)break;
 				mAddFavorite.set(cellXY,(CellLayout.Info)event.getLocalState());
 				post(mAddFavorite);
 				break;
+			
 		}
 		invalidate();
 		return true;
 	}
-	private int[] pointToSpan(float x,float y){
+	public int[] pointToCell(float x,float y){
 		int[] cellXY=new int[2];
 		cellXY[0]=(int)(x/(getMeasuredWidth()/getColnums()));
 		cellXY[1]=(int)(y/(getMeasuredHeight()/getRownums()));
@@ -308,12 +329,26 @@ public class CellLayout extends MoeViewGroup implements View.OnClickListener,Vie
 			if(getContext().getContentResolver().delete(LauncherSettings.WorkspaceScreens.CONTENT_URI,LauncherSettings.WorkspaceScreens.SCREEN_RANK+"=?",new String[]{getRank()+""})>0)
 				((ViewGroup)getParent()).removeView(this);
 	}
-	public View getViewFromPoint(int cellx,int celly){
+	public View findViewFromPoint(int cellx,int celly){
 		return findViewInPoint(cellx*childWidth,celly*childHeight);
+	}
+	public View[] findViewsFromRect(Rect rect){
+		ArrayList<View> list=new ArrayList<>();
+		for(int x=rect.left;x<rect.right;x++)
+		for(int y=rect.top;y<rect.bottom;y++){
+		View view=findViewFromPoint(x,y);
+		if(view!=null)
+			list.add(view);
+		}
+		return list.toArray(new View[0]);
+	}
+	public void save(){
+		mPointCheck.save();
 	}
 	public static class Info{
 		public View view;
 		public ItemInfo info;
+		public DragShadowBuilder shadow;
 	}
 	private class hover implements Runnable
 	{

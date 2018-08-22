@@ -122,7 +122,7 @@ public class LauncherAppsCompatVL extends LauncherAppsCompat
 	@Override
 	public List<AppWidgetProviderInfo> getAppWidgetProviders(String packageName)
 	{
-		return mAppWidgetManager.getInstalledProvidersForPackage(packageName,null);
+		return mAppWidgetManager.getInstalledProvidersForPackage(packageName,getUser());
 	}
 
 	@Override

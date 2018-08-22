@@ -28,13 +28,15 @@ import android.icu.text.Collator;
 import com.moe.icelauncher.LauncherProviderChangeListener;
 import java.util.Iterator;
 import android.content.pm.ActivityInfo;
+import android.graphics.drawable.BitmapDrawable;
+import android.content.ComponentName;
 
 public class LauncherModel implements LauncherAppsCompat.OnAppsChangedCallbackCompat
 {
 	private static LauncherModel launcherModel;
 	private Context context;
 	private LoadThread loadThread;
-	//private static final int CHECK_PACKAGES=1;
+	private static final int CHECK_PACKAGES=1;
 	private static final int GET_ALLPACKAGES=2;
 	private List<AppInfo> appsList;
 	private Callback callback;
@@ -99,44 +101,67 @@ public class LauncherModel implements LauncherAppsCompat.OnAppsChangedCallbackCo
 		public boolean handleMessage(Message p1)
 		{
 			switch(p1.what){
-				case GET_ALLPACKAGES:
-					if(appsList==null)
-						appsList=new ArrayList<AppInfo>();
+				case CHECK_PACKAGES:
+					//校验数据库数据
+					Cursor packages=mContentResolver.query(LauncherSettings.AllApps.CONTENT_URI,new String[]{LauncherSettings.AllApps.PACKAGENAME},null,null,null);
+					if(packages!=null){
+						while(packages.moveToNext()){
+							try{context.getPackageManager().getInstallerPackageName(packages.getString(0));}
+							catch(Exception e){
+								onPackageRemoved(packages.getString(0),null);
+							}
+						}
+						packages.close();
+					}
 					Intent intent=new Intent(Intent.ACTION_MAIN);
 					intent.addCategory(Intent.CATEGORY_LAUNCHER);
 					List<ResolveInfo> listResolve=context.getPackageManager().queryIntentActivities(intent,PackageManager.GET_UNINSTALLED_PACKAGES);
 					for(ResolveInfo info:listResolve){
-						AppInfo item=loadResolveInfo(info);
-						int index=appsList.indexOf(item);
-						if(index==-1)
-							appsList.add(item);
-							else
-							appsList.set(index,item);
-						/*Cursor cursor=mContentResolver.query(LauncherSettings.AllApps.CONTENT_URI,null,LauncherSettings.AllApps.PACKAGENAME+"=?",new String[]{info.activityInfo.packageName},null);
-						if(cursor==null||!cursor.moveToNext()){
-								AppInfo item=loadResolveInfo(info);
-								insert(item);
-
-						}else{
+						Cursor cursor=mContentResolver.query(LauncherSettings.AllApps.CONTENT_URI,null,LauncherSettings.AllApps.COMPONENTNAME+"=?",new String[]{new ComponentName(info.activityInfo.packageName,info.activityInfo.name).flattenToString()},null);
+						if(cursor!=null&&!cursor.moveToNext()){
+							//插入一条数据
+							onPackageAdded(info.activityInfo.packageName,null);
+						//AppInfo item=loadResolveInfo(info);
+						//ContentValues cv=new ContentValues();
+						//item.addToDatabase(cv,context);
+						//mContentResolver.insert(LauncherSettings.AllApps.CONTENT_URI,cv);
+						}
+						if(cursor!=null)cursor.close();
+						}
+					break;
+				case GET_ALLPACKAGES:
+					if(appsList==null)
+						appsList=new ArrayList<AppInfo>();
+						appsList.clear();
+						Cursor cursor=mContentResolver.query(LauncherSettings.AllApps.CONTENT_URI,null,null,null);
+						if(cursor!=null){
+							while(cursor.moveToNext()){
 							//存在该数据，解析
 							AppInfo item=new AppInfo();
 							item._id=cursor.getInt(cursor.getColumnIndex(LauncherSettings.AllApps._ID));
 							if(!appsList.contains(item)){
-								//列表没有该项，继续解析并加入该项
-								item.title=cursor.getString(cursor.getColumnIndex(LauncherSettings.AllApps.TITLE));
-								item.icon=Utilities.createIconBitmap(cursor,cursor.getColumnIndex(LauncherSettings.AllApps.ICON),context);
-								item.componentName=cursor.getString(cursor.getColumnIndex(LauncherSettings.AllApps.COMPONENTNAME));
+								//列表没有该项，继续解析并加入该
+								//item.title=cursor.getString(cursor.getColumnIndex(LauncherSettings.AllApps.TITLE));
+								//item.icon=new BitmapDrawable(Utilities.createIconBitmap(cursor,cursor.getColumnIndex(LauncherSettings.AllApps.ICON),context));
+								item.activity=ComponentName.unflattenFromString( cursor.getString(cursor.getColumnIndex(LauncherSettings.AllApps.COMPONENTNAME))).getClassName();
 								item.state=cursor.getInt(cursor.getColumnIndex(LauncherSettings.AllApps.STATE));
 								item.lastUpdateTime=cursor.getLong(cursor.getColumnIndex(LauncherSettings.AllApps.LASTUPDATETIME));
 								item.modified=cursor.getLong(cursor.getColumnIndex(LauncherSettings.AllApps.MODIFIED));
 								item.flags=cursor.getInt(cursor.getColumnIndex(LauncherSettings.AllApps.FLAGS));
 								item.iconSanifyScale=cursor.getFloat(cursor.getColumnIndex(LauncherSettings.AllApps.ICONSANIFYSCALE));
-								item.profileId=cursor.getInt(cursor.getColumnIndex(LauncherSettings.AllApps.PROFILEID));
+								//item.profileId=cursor.getInt(cursor.getColumnIndex(LauncherSettings.AllApps.PROFILEID));
 								item.packageName=cursor.getString(cursor.getColumnIndex(LauncherSettings.AllApps.PACKAGENAME));
+								IconItem iconItem=IconCache.getInstance(context).getInbadedIcon(ComponentName.unflattenFromString(item.componentName()));
+								item.title=iconItem.title;
+								item.icon=iconItem.icon;
+									
+								if(item.title==null)
+									onPackageRemoved(item.packageName,null);
+								else
 								appsList.add(item);
 							}
+							}
 							cursor.close();
-						}*/
 						}
 						if(callback!=null){
 							sort();
@@ -150,6 +175,7 @@ public class LauncherModel implements LauncherAppsCompat.OnAppsChangedCallbackCo
 									}
 								});
 						}
+						handler.obtainMessage(CHECK_PACKAGES).sendToTarget();
 					break;
 			}
 			return true;
@@ -207,9 +233,12 @@ public class LauncherModel implements LauncherAppsCompat.OnAppsChangedCallbackCo
 			ContentValues cv=new ContentValues();
 			cv.put(LauncherSettings.Favorites.STATE,DeviceManager.PACKAGE_HIDE);
 			mContentResolver.update(LauncherSettings.Favorites.CONTENT_URI,cv,LauncherSettings.Favorites.PACKAGENAME+"=?",new String[]{packageName});
+			mContentResolver.update(LauncherSettings.AllApps.CONTENT_URI,cv,LauncherSettings.AllApps.PACKAGENAME+"=?",new String[]{packageName});
 		}catch(Exception e){
 			//软件已卸载
+			mContentResolver.delete(LauncherSettings.Icons.CONTENT_URI,LauncherSettings.Icons.PACKAGENAME+"=?",new String[]{packageName});
 			mContentResolver.delete(LauncherSettings.Favorites.CONTENT_URI,LauncherSettings.Favorites.PACKAGENAME+"=?",new String[]{packageName});
+			mContentResolver.delete(LauncherSettings.AllApps.CONTENT_URI,LauncherSettings.AllApps.PACKAGENAME+"=?",new String[]{packageName});
 			delete(packageName);
 		}
 		if(callback!=null){
@@ -235,7 +264,15 @@ public class LauncherModel implements LauncherAppsCompat.OnAppsChangedCallbackCo
 				appsList.set(index,item);
 				else
 				appsList.add(item);
+			Cursor cursor=mContentResolver.query(LauncherSettings.AllApps.CONTENT_URI,null,LauncherSettings.AllApps.COMPONENTNAME+"=?",new String[]{item.activity},null);
+			if(cursor==null||!cursor.moveToNext()){
+				item.addToDatabase(cv,context);
+				mContentResolver.insert(LauncherSettings.AllApps.CONTENT_URI,cv);
+			}
+			if(cursor!=null)cursor.close();
+			
 		}
+		mContentResolver.update(LauncherSettings.AllApps.CONTENT_URI,cv,LauncherSettings.AllApps.PACKAGENAME+"=?",new String[]{packageName});
 		sort();
 		if(callback!=null){
 			callback.notifyDataSetChanged();
@@ -290,8 +327,9 @@ public class LauncherModel implements LauncherAppsCompat.OnAppsChangedCallbackCo
 	private AppInfo loadResolveInfo(ResolveInfo info){
 		final AppInfo item=new AppInfo();
 		ActivityInfo activity=info.activityInfo;
-		item.title=activity.loadLabel(context.getPackageManager()).toString();
-		item.icon=IconCache.getInstance(context).getInbadedIcon(info);
+		IconItem iconItem=IconCache.getInstance(context).getInbadedIcon(new ComponentName(info.activityInfo.packageName,info.activityInfo.name));
+		item.title=iconItem.title;
+		item.icon=iconItem.icon;
 		item.packageName=activity.packageName;
 		item.activity=activity.name;
 		int state=context.getPackageManager().getApplicationEnabledSetting(info.activityInfo.packageName);
