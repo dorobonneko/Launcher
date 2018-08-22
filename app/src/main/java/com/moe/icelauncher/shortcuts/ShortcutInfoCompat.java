@@ -10,13 +10,16 @@ import android.os.UserHandle;
 public class ShortcutInfoCompat {
     private static final String INTENT_CATEGORY = "com.android.launcher3.DEEP_SHORTCUT";
     public static final String EXTRA_SHORTCUT_ID = "shortcut_id";
-
+	private boolean custom;
     private ShortcutInfo mShortcutInfo;
 
     public ShortcutInfoCompat(ShortcutInfo shortcutInfo) {
-        mShortcutInfo = shortcutInfo;
+        this(shortcutInfo,false);
     }
-
+	public ShortcutInfoCompat(ShortcutInfo shortcutInfo,boolean custom) {
+        mShortcutInfo = shortcutInfo;
+		this.custom=custom;
+    }
 	public Intent getIntent()
 	{
 		return mShortcutInfo.getIntent();
@@ -91,7 +94,9 @@ public class ShortcutInfoCompat {
     public CharSequence getDisabledMessage() {
         return mShortcutInfo.getDisabledMessage();
     }
-
+	public boolean isCustom(){
+		return custom;
+	}
     @Override
     public String toString() {
         return mShortcutInfo.toString();

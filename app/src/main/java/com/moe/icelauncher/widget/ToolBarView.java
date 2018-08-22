@@ -18,6 +18,7 @@ import android.animation.ValueAnimator;
 import android.animation.ObjectAnimator;
 import android.animation.Animator;
 import com.moe.icelauncher.model.FavoriteInfo;
+import com.moe.icelauncher.model.*;
 
 public class ToolBarView extends ViewGroup implements View.OnDragListener
 {
@@ -156,7 +157,7 @@ public class ToolBarView extends ViewGroup implements View.OnDragListener
 		switch(event.getAction()){
 			case event.ACTION_DRAG_STARTED:
 				CellLayout.Info info=(CellLayout.Info)event.getLocalState();
-				if(info.info.itemType==LauncherSettings.Favorites.ITEM_TYPE_APPLICATION){
+				if(info.info instanceof AppInfo){
 					//显示3个条目
 					delete.setVisibility(VISIBLE);
 				}else{
@@ -194,15 +195,14 @@ public class ToolBarView extends ViewGroup implements View.OnDragListener
 					//打开应用详情
 					ItemInfo appinfo=((CellLayout.Info)p2.getLocalState()).info;
 					Intent i = new Intent("android.settings.APPLICATION_DETAILS_SETTINGS");
-					String pkg = "com.android.settings";
-					String cls = "com.android.settings.applications.InstalledAppDetails";
-					i.setComponent(new ComponentName(pkg, cls));
+					//String pkg = "com.android.settings";
+					//String cls = "com.android.settings.applications.InstalledAppDetails";
+					//i.setComponent(new ComponentName(pkg, cls));
 					i.setData(Uri.parse("package:" + appinfo.packageName));
 					getContext().startActivity(i);
 				}else if(p1==delete){
 					ItemInfo appinfo=((CellLayout.Info)p2.getLocalState()).info;
-					Intent i = new Intent(Intent.ACTION_UNINSTALL_PACKAGE);
-					i.setData(Uri.parse("package:" + appinfo.packageName));
+					Intent i = new Intent(Intent.ACTION_DELETE,Uri.fromParts("package",appinfo.packageName,null));
 					getContext().startActivity(i);
 				}else if(p1==cancel){
 					ItemInfo appinfo=((CellLayout.Info)p2.getLocalState()).info;

@@ -19,13 +19,14 @@ public class ShortCutView extends ViewGroup
 	private TextView mTitle;
 	private ImageView mIcon;
 	//private float item_title_size;
-	private int item_icon_size,item_cellspacing;
+	private int item_icon_size,item_cellspacing,item_height;
 	private ShortcutInfoCompat info;
 	public ShortCutView(Context context){
 		super(context);
 		item_cellspacing=getResources().getDimensionPixelOffset(R.dimen.item_cellspacing);
 		item_icon_size=getResources().getDimensionPixelOffset(R.dimen.item_icon_size);
 		//item_title_size=getResources().getDimension(R.dimen.item_title_size);
+		item_height = getResources().getDimensionPixelOffset(R.dimen.item_height);
 		addView(mTitle=new TextView(context));
 		addView(mIcon=new ImageView(context));
 		mTitle.setTextSize(TypedValue.COMPLEX_UNIT_SP,14);
@@ -46,7 +47,8 @@ public class ShortCutView extends ViewGroup
 	@Override
 	protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec)
 	{
-		super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+		widthMeasureSpec=MeasureSpec.makeMeasureSpec(MeasureSpec.getSize(widthMeasureSpec),MeasureSpec.EXACTLY);
+		heightMeasureSpec=MeasureSpec.makeMeasureSpec(item_height,MeasureSpec.EXACTLY);
 		mTitle.measure(widthMeasureSpec,heightMeasureSpec);
 		mIcon.measure(MeasureSpec.makeMeasureSpec(item_icon_size,MeasureSpec.EXACTLY),MeasureSpec.makeMeasureSpec(item_icon_size,MeasureSpec.EXACTLY));
 		setMeasuredDimension(widthMeasureSpec,heightMeasureSpec);

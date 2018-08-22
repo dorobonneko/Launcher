@@ -1,50 +1,26 @@
 package com.moe.icelauncher.widget;
-import android.view.ViewGroup;
-import android.content.Context;
-import android.animation.Animator;
-import android.animation.ObjectAnimator;
-import android.view.animation.Animation;
-import android.view.animation.ScaleAnimation;
-import com.moe.icelauncher.R;
-import android.graphics.Canvas;
-import android.graphics.Path;
-import android.view.View;
-import android.graphics.Paint;
-import com.moe.icelauncher.model.IconInfo;
-import com.moe.icelauncher.model.AppInfo;
-import android.widget.ImageView;
-import com.moe.icelauncher.util.DeviceManager;
-import android.content.pm.PackageManager;
-import android.view.MotionEvent;
-import android.view.View.OnClickListener;
-import android.content.Intent;
-import android.net.Uri;
-import android.content.ComponentName;
-import android.graphics.Point;
-import android.graphics.Matrix;
-import android.graphics.Camera;
-import com.moe.icelauncher.compat.LauncherAppsCompat;
-import android.content.pm.ShortcutInfo;
-import com.moe.icelauncher.shortcuts.DeepShortcutManager;
-import com.moe.icelauncher.shortcuts.ShortcutInfoCompat;
-import android.graphics.drawable.RippleDrawable;
-import android.content.res.TypedArray;
-import android.graphics.drawable.Drawable;
-import com.moe.icelauncher.adapter.IconsAdapter;
-import android.animation.ValueAnimator;
-import android.animation.TypeEvaluator;
-import com.moe.icelauncher.model.FavoriteInfo;
-import java.net.URISyntaxException;
-import com.moe.icelauncher.model.ItemInfo;
-import com.moe.icelauncher.*;
-import java.util.*;
-import android.database.*;
-import android.graphics.drawable.*;
-import android.view.View.*;
-import android.app.*;
-import android.content.*;
 
-public class PopupView extends ViewGroup implements OnClickListener,OnLongClickListener
+import android.animation.*;
+import android.content.*;
+import android.content.pm.*;
+import android.graphics.*;
+import android.view.*;
+import android.view.View.*;
+import android.widget.*;
+import com.moe.icelauncher.*;
+import com.moe.icelauncher.model.*;
+import com.moe.icelauncher.shortcuts.*;
+import java.util.*;
+
+import android.app.AlertDialog;
+import android.database.Cursor;
+import android.graphics.drawable.Icon;
+import android.net.Uri;
+import com.moe.icelauncher.adapter.ShortcutsAdapter;
+import com.moe.icelauncher.util.DeviceManager;
+import java.net.URISyntaxException;
+
+public class PopupView extends ViewGroup implements OnClickListener,ListView.OnItemClickListener,ListView.OnItemLongClickListener
 {
 	private boolean mShown;
 	private ValueAnimator enter,exit;
@@ -58,6 +34,9 @@ public class PopupView extends ViewGroup implements OnClickListener,OnLongClickL
 	private float cursorSize;
 	private Matrix pathMatrix=new Matrix();
 	private int measureWidth,measureHeight;
+	private ListView listView;
+	private ShortcutsAdapter mShortcutsAdapter;
+	private List<ShortcutInfoCompat> list;
 	public PopupView(Context context)
 	{
 		super(context);
@@ -74,6 +53,11 @@ public class PopupView extends ViewGroup implements OnClickListener,OnLongClickL
 		addView(mShortCutTitleView = new ShortCutTitleView(context));
 		mShortCutTitleView.inflateMenu(R.menu.shortcut_menu);
 		mShortCutTitleView.setOnClickListener(this);
+		listView=new ListView(context);
+		listView.setAdapter(mShortcutsAdapter=new ShortcutsAdapter(list=new ArrayList<>()));
+		addView(listView);
+		listView.setOnItemClickListener(this);
+		listView.setOnItemLongClickListener(this);
 	}
 	private void initAnime()
 	{
@@ -181,21 +165,14 @@ public class PopupView extends ViewGroup implements OnClickListener,OnLongClickL
 		parentWidth = MeasureSpec.getSize(widthMeasureSpec);
 		parentHeight = MeasureSpec.getSize(heightMeasureSpec);
 		int width=parentWidth / 5 * 2;
-		int height=getChildCount() * itemHeight;
-		for (int i=0;i < getChildCount();i++)
-		{
-			getChildAt(i).measure(MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(itemHeight, MeasureSpec.EXACTLY));
-		}
+		//int height=getChildCount() * itemHeight;
+		mShortCutTitleView.measure(MeasureSpec.makeMeasureSpec(width,MeasureSpec.EXACTLY),MeasureSpec.makeMeasureSpec(itemHeight,MeasureSpec.EXACTLY));
+		getChildAt(1).measure(MeasureSpec.makeMeasureSpec(width,MeasureSpec.EXACTLY),MeasureSpec.makeMeasureSpec(itemHeight*6,MeasureSpec.AT_MOST));
 		measureWidth = width;
-		setMeasuredDimension(MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY));
+		measureHeight = getChildAt(1).getMeasuredHeight()+itemHeight;
+		setMeasuredDimension(MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(itemHeight+getChildAt(1).getMeasuredHeight(), MeasureSpec.EXACTLY));
+		toDoXY();
 	}
-	private void measure()
-	{
-		measureHeight = getChildCount() * itemHeight;
-		setMeasuredDimension(measureWidth, measureHeight);
-	}
-
-
 	@Override
 	protected void onLayout(boolean p1, int p2, int p3, int p4, int p5)
 	{
@@ -246,21 +223,18 @@ public class PopupView extends ViewGroup implements OnClickListener,OnLongClickL
 			{}
 		}
 		this.info = info;
-		measure();
-		toDoXY();
+		//toDoXY();
 		mShown = true;
 		if (enter.isRunning())enter.cancel();
 		enter.start();
 	}
 	private void loadShortcuts(String activity)
 	{
-		if (getChildCount() > 1)
-			removeViews(1, getChildCount() - 1);
 		ComponentName mComponentName=ComponentName.unflattenFromString(activity);
 		List<ShortcutInfoCompat> list=DeepShortcutManager.getInstance(getContext()).queryForShortcutsContainer(mComponentName, null, android.os.Process.myUserHandle());
 		if(list==null)list=Collections.emptyList();
-		parseList(list,false);
-		list.clear();
+		//parseList(list,false);
+		//list.clear();
 		Cursor cursor=getContext().getContentResolver().query(LauncherSettings.Shortcuts.CONTENT_URI,null,LauncherSettings.Shortcuts.PACKAGENAME+"=?",new String[]{mComponentName.getPackageName()},null);
 		while(cursor!=null&&cursor.moveToNext()){
 			ShortcutInfo.Builder build=new ShortcutInfo.Builder(getContext(),cursor.getInt(cursor.getColumnIndex(LauncherSettings.Shortcuts._ID))+"");
@@ -274,12 +248,15 @@ public class PopupView extends ViewGroup implements OnClickListener,OnLongClickL
 			if(intent!=null)
 			build.setIcon(Icon.createWithBitmap(Utilities.drawable2Bitmap(IconCache.getInstance(getContext()).getInbadedIcon(intent.getComponent()).icon)));
 			build.setShortLabel(cursor.getString(cursor.getColumnIndex(LauncherSettings.Shortcuts.TITLE)));
-			list.add(new ShortcutInfoCompat(build.build()));
+			list.add(new ShortcutInfoCompat(build.build(),true));
 		}
 		if(cursor!=null)cursor.close();
-		parseList(list,true);
+		this.list.clear();
+		this.list.addAll(list);
+		mShortcutsAdapter.notifyDataSetChanged();
+		//parseList(list,true);
 	}
-	private void parseList(List<ShortcutInfoCompat> list,boolean longClick){
+	/*private void parseList(List<ShortcutInfoCompat> list,boolean longClick){
 		for (ShortcutInfoCompat info:list)
 		{
 			ShortCutView scv=new ShortCutView(getContext());
@@ -291,9 +268,9 @@ public class PopupView extends ViewGroup implements OnClickListener,OnLongClickL
 			scv.setOnClickListener(this);
 			if(longClick)
 			scv.setOnLongClickListener(this);
-			addView(scv);
+			listView.addView(scv);
 		}
-	}
+	}*/
 	private void toDoXY()
 	{
 		path.reset();
@@ -359,9 +336,9 @@ public class PopupView extends ViewGroup implements OnClickListener,OnLongClickL
 				{
 					ItemInfo appinfo=(ItemInfo)info.obj;
 					Intent i = new Intent("android.settings.APPLICATION_DETAILS_SETTINGS");
-					String pkg = "com.android.settings";
-					String cls = "com.android.settings.applications.InstalledAppDetails";
-					i.setComponent(new ComponentName(pkg, cls));
+					//String pkg = "com.android.settings";
+					//String cls = "com.android.settings.applications.InstalledAppDetails";
+					//i.setComponent(new ComponentName(pkg, cls));
 					i.setData(Uri.parse("package:" + appinfo.packageName));
 					getContext().startActivity(i);
 				}
@@ -398,37 +375,46 @@ public class PopupView extends ViewGroup implements OnClickListener,OnLongClickL
 					getContext().startActivity(new Intent(getContext(), DetailsActivity.class).setPackage(itemInfo.packageName));
 				}break;
 			default:
-				ShortcutInfoCompat info=((ShortCutView)p1).getShortcutInfo();
-				Intent intent=info.getIntent();
-				if(intent==null){
-					intent=new Intent();
-					intent.setComponent(info.getActivity());
-					intent.setPackage(info.getPackage());
-				}
-				DeepShortcutManager.getInstance(getContext()).startShortcut(info.getPackage(), info.getId(), intent, null, info.getUserHandle());
 				break;
 		}
 		hide();
 	}
 
 	@Override
-	public boolean onLongClick(final View view)
+	public void onItemClick(AdapterView<?> p1, View p2, int p3, long p4)
 	{
-		if(view instanceof ShortCutView){
-			final ShortcutInfoCompat shortcutInfo=((ShortCutView)view).getShortcutInfo();
-			new AlertDialog.Builder(getContext()).setTitle(R.string.ornotdelete).setMessage(shortcutInfo.getShortLabel()).setPositiveButton(android.R.string.cancel, null).setNegativeButton(android.R.string.ok, new DialogInterface.OnClickListener(){
-
-					@Override
-					public void onClick(DialogInterface p1, int p2)
-					{
-						removeView(view);
-						measure();
-						toDoXY();
-						getContext().getContentResolver().delete(LauncherSettings.Shortcuts.CONTENT_URI,LauncherSettings.Shortcuts._ID+"=?",new String[]{shortcutInfo.getId()});
-					}
-				}).show();
-		}return true;
+		ShortcutInfoCompat info=list.get(p3);
+		Intent intent=info.getIntent();
+		if(intent==null){
+			intent=new Intent();
+			intent.setComponent(info.getActivity());
+			intent.setPackage(info.getPackage());
+		}
+		DeepShortcutManager.getInstance(getContext()).startShortcut(info.getPackage(), info.getId(), intent, null, info.getUserHandle());
+		hide();
 	}
+
+
+	@Override
+	public boolean onItemLongClick(AdapterView<?> p1, View p2, int p3, long p4)
+	{
+		final ShortcutInfoCompat shortcutInfo=list.get(p3);
+		if(!shortcutInfo.isCustom())return true;
+		new AlertDialog.Builder(getContext()).setTitle(R.string.ornotdelete).setMessage(shortcutInfo.getShortLabel()).setPositiveButton(android.R.string.cancel, null).setNegativeButton(android.R.string.ok, new DialogInterface.OnClickListener(){
+
+				@Override
+				public void onClick(DialogInterface p1, int p2)
+				{
+					list.remove(shortcutInfo);
+					mShortcutsAdapter.notifyDataSetChanged();
+					//toDoXY();
+					getContext().getContentResolver().delete(LauncherSettings.Shortcuts.CONTENT_URI,LauncherSettings.Shortcuts._ID+"=?",new String[]{shortcutInfo.getId()});
+				}
+			}).show();
+		return true;
+	}
+
+
 
 
 }
